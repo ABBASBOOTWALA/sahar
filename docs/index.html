@@ -354,6 +354,11 @@ function setBusy(on){
   $('spark').classList.toggle('busy',on);
 }
 
+/* A failed measurement must never leave the previous one on screen. */
+function clearReadout(){
+  $('readout').hidden=true; $('screens').hidden=true; $('spark').hidden=true;
+}
+
 function markPreset(){
   const k=$('phrase').value.trim().toLowerCase(), o=$('origin').value.trim();
   document.querySelectorAll('[data-p]').forEach(b=>
@@ -363,7 +368,9 @@ function markPreset(){
 async function run(){
   if(!B){ return; }
   const phrase=$('phrase').value.trim(), origin=parseInt($('origin').value,10);
-  if(!phrase||isNaN(origin)){ $('status').textContent='Enter a phrase and a four-digit year.'; return; }
+  if(!phrase||isNaN(origin)){
+    clearReadout();
+    $('status').textContent='Enter a phrase and a four-digit year.'; return; }
   markPreset();
   setBusy(true);
   const started=Date.now();
@@ -382,17 +389,20 @@ async function run(){
     }
   }catch(e){
     await settle();
-    $('status').textContent='That concept is not bundled, and this page cannot reach OpenAlex from '+
-      'here. The published version at the project repository queries it live. Meanwhile the '+
-      Object.keys(B.counts).length+' concepts in the table below all work offline.';
+    clearReadout();
+    $('status').textContent='No reading for "'+phrase+'". It is not among the '+
+      Object.keys(B.counts).length+' concepts shipped with this page, and this viewer blocks '+
+      'the live lookup. Pick a row from the table below, or open the published version, '+
+      'which queries OpenAlex directly.';
     setBusy(false); return;
   }
 
   const total=Object.values(detectCounts).reduce((a,b)=>a+b,0);
   if(!total){
     await settle();
-    $('status').textContent='No documents match that phrase in the science literature.';
-    $('readout').hidden=true; $('screens').hidden=true; $('spark').hidden=true;
+    clearReadout();
+    $('status').textContent='No reading for "'+phrase+'". No documents in the science '+
+      'literature match that phrase.';
     setBusy(false); return;
   }
   const poly=polysemy(screenCounts,origin);
