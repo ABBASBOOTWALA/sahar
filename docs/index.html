@@ -40,13 +40,25 @@ input{font-family:var(--fm);font-size:15px;padding:9px 10px;border:1px solid var
   background:var(--bg);color:var(--ink);width:100%;min-width:0}
 input:focus-visible{outline:2px solid var(--signal);outline-offset:1px}
 button{font-family:var(--fb);font-weight:600;font-size:14px;padding:10px 18px;border:1px solid var(--ink);
-  border-radius:2px;background:var(--ink);color:var(--panel);cursor:pointer}
-button:disabled{opacity:.45;cursor:default}
-button.ghost{background:transparent;color:var(--ink);border-color:var(--line);font-weight:500;padding:6px 10px;font-size:12.5px}
+  border-radius:2px;background:var(--ink);color:var(--panel);cursor:pointer;min-width:112px;
+  transition:background .15s,border-color .15s,color .15s,transform .07s,opacity .15s}
+button:hover:not(:disabled){background:var(--signal);border-color:var(--signal)}
+button:active:not(:disabled){transform:translateY(1px)}
+button:disabled{opacity:.4;cursor:default}
+button.ghost{background:transparent;color:var(--dim);border-color:var(--line);font-weight:500;
+  padding:6px 10px;font-size:12.5px;min-width:0}
+button.ghost:hover:not(:disabled){background:transparent;border-color:var(--signal);color:var(--signal)}
+button.ghost.on{border-color:var(--signal);color:var(--signal);font-weight:600}
 button:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.spin{display:inline-block;width:11px;height:11px;border:2px solid currentColor;
+  border-right-color:transparent;border-radius:50%;animation:sp .55s linear infinite;
+  vertical-align:-1px;margin-right:7px}
+@keyframes sp{to{transform:rotate(360deg)}}
 .presets{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:1px;background:var(--line);
-  border:1px solid var(--line);border-radius:2px;overflow:hidden}
+  border:1px solid var(--line);border-radius:2px;overflow:hidden;transition:opacity .18s}
+.readout.busy{opacity:.35}
+.cell .v{transition:color .2s}
 .cell{background:var(--panel);padding:12px 13px;min-width:0}
 .cell .k{font-family:var(--fm);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
 .cell .v{font-family:var(--fm);font-size:23px;font-weight:500;font-variant-numeric:tabular-nums;margin-top:3px}
@@ -60,6 +72,13 @@ button:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
 .verdict{margin-left:auto;font-family:var(--fm);font-size:11px;letter-spacing:.08em;text-transform:uppercase;flex:none;padding-top:2px}
 table{border-collapse:collapse;width:100%;font-size:13px}
 th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);white-space:nowrap}
+tbody tr{cursor:pointer;transition:background .12s}
+tbody tr:hover{background:var(--grid)}
+tbody tr:focus-visible{outline:2px solid var(--signal);outline-offset:-2px}
+tbody tr td:first-child{font-weight:500}
+.screen{transition:border-color .2s}
+.spark{transition:opacity .18s}
+.spark.busy{opacity:.3}
 th{font-family:var(--fm);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);font-weight:500}
 td.num{text-align:right;font-family:var(--fm);font-variant-numeric:tabular-nums}
 .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -314,17 +333,41 @@ function fillTable(){
     else status='usable';
     const e=r.e==null?'-':(r.e>0?'+':'')+r.e;
     const ec=r.e==null?'':(r.e>0?'late':r.e<0?'early':'exact');
-    return '<tr><td>'+r.n+'</td><td class="num">'+r.o+'</td><td class="num">'+(r.on??'-')+
+    return '<tr tabindex="0" data-k="'+r.k+'" data-o="'+r.o+'" title="Run '+r.n+' on the bench">'+
+      '<td>'+r.n+'</td><td class="num">'+r.o+'</td><td class="num">'+(r.on??'-')+
       '</td><td class="num '+ec+'">'+e+'</td><td class="num">'+r.d.toLocaleString()+
       '</td><td class="num">'+r.p+'</td><td class="'+cls+'">'+status+'</td></tr>';
   }).join('');
+  tb.querySelectorAll('tr').forEach(tr=>{
+    const go=()=>{ $('phrase').value=tr.dataset.k; $('origin').value=tr.dataset.o;
+      document.querySelector('.bench').scrollIntoView({behavior:'smooth',block:'start'}); run(); };
+    tr.addEventListener('click',go);
+    tr.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
+  });
+}
+
+function setBusy(on){
+  const b=$('run');
+  b.disabled=on;
+  b.innerHTML = on ? '<span class="spin"></span>Measuring' : 'Measure';
+  $('readout').classList.toggle('busy',on);
+  $('spark').classList.toggle('busy',on);
+}
+
+function markPreset(){
+  const k=$('phrase').value.trim().toLowerCase(), o=$('origin').value.trim();
+  document.querySelectorAll('[data-p]').forEach(b=>
+    b.classList.toggle('on', b.dataset.p.toLowerCase()===k && b.dataset.o===o));
 }
 
 async function run(){
   if(!B){ return; }
   const phrase=$('phrase').value.trim(), origin=parseInt($('origin').value,10);
   if(!phrase||isNaN(origin)){ $('status').textContent='Enter a phrase and a four-digit year.'; return; }
-  $('run').disabled=true;
+  markPreset();
+  setBusy(true);
+  const started=Date.now();
+  const settle=async()=>{ const d=260-(Date.now()-started); if(d>0) await new Promise(r=>setTimeout(r,d)); };
   const key=phrase.toLowerCase();
   const bundled=B.counts[key];
   let detectCounts, screenCounts, source;
@@ -338,17 +381,19 @@ async function run(){
       source='live';
     }
   }catch(e){
+    await settle();
     $('status').textContent='That concept is not bundled, and this page cannot reach OpenAlex from '+
       'here. The published version at the project repository queries it live. Meanwhile the '+
       Object.keys(B.counts).length+' concepts in the table below all work offline.';
-    $('run').disabled=false; return;
+    setBusy(false); return;
   }
 
   const total=Object.values(detectCounts).reduce((a,b)=>a+b,0);
   if(!total){
+    await settle();
     $('status').textContent='No documents match that phrase in the science literature.';
     $('readout').hidden=true; $('screens').hidden=true; $('spark').hidden=true;
-    $('run').disabled=false; return;
+    setBusy(false); return;
   }
   const poly=polysemy(screenCounts,origin);
   const fires=firesBefore(detectCounts,origin,B.C,B.beta);
@@ -380,13 +425,14 @@ async function run(){
     ? 'The detector stays quiet before '+origin+', so this concept can calibrate it.'
     : 'The detector fires in '+fires+', before the concept existed. It cannot calibrate itself on contamination.';
 
+  await settle();
   drawSpark(detectCounts,origin,on);
   $('readout').hidden=false; $('screens').hidden=false;
   $('status').textContent=(source==='bundled'
     ? 'Computed from counts shipped with this page. '
     : 'Queried live from OpenAlex. ')+
     'Green marker is the documented origin, amber is what the instrument detected.';
-  $('run').disabled=false;
+  setBusy(false);
 }
 
 async function boot(){
@@ -403,12 +449,14 @@ async function boot(){
   $('kRaw').textContent=B.raw.toFixed(1);
   $('kLoo').textContent=B.loo.toFixed(1);
   drawCurve(); fillTable();
-  $('run').disabled=false;
+  setBusy(false);
   run();
 }
 
 $('run').addEventListener('click',run);
 $('phrase').addEventListener('keydown',e=>{if(e.key==='Enter')run();});
+$('phrase').addEventListener('input',markPreset);
+$('origin').addEventListener('input',markPreset);
 $('origin').addEventListener('keydown',e=>{if(e.key==='Enter')run();});
 document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{
   $('phrase').value=b.dataset.p; $('origin').value=b.dataset.o; run();
