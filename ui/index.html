@@ -1,0 +1,385 @@
+<title>Sahar Calibration Bench</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@600;700&display=swap">
+<style>
+/* Layout: an instrument panel. Live bench on top, standing calibration evidence below. */
+:root{
+  --bg:#f7f6f3; --panel:#ffffff; --ink:#1b1d21; --dim:#6a6f78; --line:#dcd9d2;
+  --signal:#9a5b12; --late:#9a5b12; --early:#1f6f6a; --exact:#3f6212;
+  --fail:#9c2d2d; --grid:#e7e4de;
+  --fd:"IBM Plex Serif",Georgia,serif;
+  --fb:"IBM Plex Sans",system-ui,sans-serif;
+  --fm:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#14161a; --panel:#1b1e23; --ink:#e8e6e1; --dim:#949aa3; --line:#2c3037;
+  --signal:#e3a455; --late:#e3a455; --early:#5fbfb6; --exact:#9ccb5a;
+  --fail:#e07b7b; --grid:#262a31; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14161a; --panel:#1b1e23; --ink:#e8e6e1; --dim:#949aa3; --line:#2c3037;
+  --signal:#e3a455; --late:#e3a455; --early:#5fbfb6; --exact:#9ccb5a;
+  --fail:#e07b7b; --grid:#262a31; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--fb);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:32px 64px}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:34px}
+h1{font-family:var(--fd);font-size:clamp(26px,4.5vw,38px);line-height:1.12;margin:0;text-wrap:balance;font-weight:700}
+h2{font-family:var(--fd);font-size:19px;margin:0 0 2px;font-weight:600}
+p{margin:0}
+.lede{color:var(--dim);max-width:62ch}
+.eyebrow{font-family:var(--fm);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:20px}
+.bench{display:flex;flex-direction:column;gap:16px}
+.ctl{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field.grow{flex:1 1 230px}
+label{font-family:var(--fm);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim)}
+input{font-family:var(--fm);font-size:15px;padding:9px 10px;border:1px solid var(--line);border-radius:2px;
+  background:var(--bg);color:var(--ink);width:100%;min-width:0}
+input:focus-visible{outline:2px solid var(--signal);outline-offset:1px}
+button{font-family:var(--fb);font-weight:600;font-size:14px;padding:10px 18px;border:1px solid var(--ink);
+  border-radius:2px;background:var(--ink);color:var(--panel);cursor:pointer}
+button:disabled{opacity:.45;cursor:default}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--line);font-weight:500;padding:6px 10px;font-size:12.5px}
+button:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.presets{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.cell{background:var(--panel);padding:12px 13px;min-width:0}
+.cell .k{font-family:var(--fm);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
+.cell .v{font-family:var(--fm);font-size:23px;font-weight:500;font-variant-numeric:tabular-nums;margin-top:3px}
+.cell .n{font-size:11.5px;color:var(--dim);margin-top:1px}
+.late{color:var(--late)} .early{color:var(--early)} .exact{color:var(--exact)} .fail{color:var(--fail)}
+.screens{display:flex;flex-direction:column;gap:8px}
+.screen{display:flex;gap:11px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:2px}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;margin-top:6px}
+.screen .t{font-weight:600;font-size:13.5px}
+.screen .d{font-size:12.5px;color:var(--dim)}
+.verdict{margin-left:auto;font-family:var(--fm);font-size:11px;letter-spacing:.08em;text-transform:uppercase;flex:none;padding-top:2px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-family:var(--fm);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--dim);font-weight:500}
+td.num{text-align:right;font-family:var(--fm);font-variant-numeric:tabular-nums}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:720px){.two{grid-template-columns:1fr}}
+.note{font-size:12.5px;color:var(--dim)}
+.flag{font-family:var(--fm);font-size:10.5px;color:var(--fail)}
+.spark{display:block;width:100%;height:58px}
+footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:var(--dim);display:flex;
+  flex-direction:column;gap:6px}
+a{color:var(--signal)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+
+<header style="display:flex;flex-direction:column;gap:10px">
+  <span class="eyebrow">Sahar &#183; ArtSciLab, UT Dallas</span>
+  <h1>How wrong is it when we date an idea?</h1>
+  <p class="lede">This is the instrument. Give it a concept and the year the concept
+  actually originated, and it queries OpenAlex live, runs two contamination screens,
+  and reports how far off its own answer is. Most answers come back several years
+  late.</p>
+</header>
+
+<section class="panel bench">
+  <div>
+    <span class="eyebrow">Live test</span>
+    <h2>Run a concept</h2>
+  </div>
+  <div class="ctl">
+    <div class="field grow">
+      <label for="phrase">Concept phrase</label>
+      <input id="phrase" value="information theory" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="field" style="flex:0 0 118px">
+      <label for="origin">Origin year</label>
+      <input id="origin" value="1948" inputmode="numeric" autocomplete="off">
+    </div>
+    <button id="run">Measure</button>
+  </div>
+  <div class="presets">
+    <span class="note" style="margin-right:2px">Try:</span>
+    <button class="ghost" data-p="polymerase chain reaction" data-o="1985">PCR, 1985</button>
+    <button class="ghost" data-p="holography" data-o="1948">holography, 1948</button>
+    <button class="ghost" data-p="carbon nanotube" data-o="1991">carbon nanotube, 1991</button>
+    <button class="ghost" data-p="quantum teleportation" data-o="1993">teleportation, 1993</button>
+  </div>
+
+  <div class="readout" id="readout" hidden>
+    <div class="cell"><div class="k">Documented</div><div class="v" id="rOrigin">-</div><div class="n">given</div></div>
+    <div class="cell"><div class="k">Detected</div><div class="v" id="rOnset">-</div><div class="n" id="rOnsetNote">measured</div></div>
+    <div class="cell"><div class="k">Signed error</div><div class="v" id="rErr">-</div><div class="n" id="rErrNote">years</div></div>
+    <div class="cell"><div class="k">Documents</div><div class="v" id="rDocs">-</div><div class="n" id="rPre">-</div></div>
+  </div>
+
+  <svg class="spark" id="spark" hidden viewBox="0 0 700 58" preserveAspectRatio="none" aria-label="Documents per year"></svg>
+
+  <div class="screens" id="screens" hidden>
+    <div class="screen">
+      <span class="dot" id="d1"></span>
+      <div style="min-width:0">
+        <div class="t">Polysemy screen</div>
+        <div class="d" id="s1">-</div>
+      </div>
+      <span class="verdict" id="v1"></span>
+    </div>
+    <div class="screen">
+      <span class="dot" id="d2"></span>
+      <div style="min-width:0">
+        <div class="t">Admissibility screen</div>
+        <div class="d" id="s2">-</div>
+      </div>
+      <span class="verdict" id="v2"></span>
+    </div>
+  </div>
+
+  <p class="note" id="status">Detector set to 12 documents sustained for three years, which is the
+  operating point we recommend. Queries go straight to OpenAlex from your browser.</p>
+</section>
+
+<section class="two">
+  <div class="panel">
+    <span class="eyebrow">Standing evidence</span>
+    <h2>Coverage against accuracy</h2>
+    <p class="note" style="margin:6px 0 10px">A stricter detector is more accurate because it
+    throws away the cases that would expose it. Accuracy bought that way is not accuracy.</p>
+    <svg id="curve" viewBox="0 0 420 230" style="width:100%;height:auto" aria-label="Coverage against accuracy"></svg>
+  </div>
+  <div class="panel">
+    <span class="eyebrow">Where it stands</span>
+    <h2>The calibration set</h2>
+    <div class="readout" style="margin-top:10px">
+      <div class="cell"><div class="k">Usable</div><div class="v" id="kN">-</div><div class="n">of 39 screened</div></div>
+      <div class="cell"><div class="k">Raw error</div><div class="v" id="kRaw">-</div><div class="n">years, mean</div></div>
+      <div class="cell"><div class="k">Corrected</div><div class="v" id="kLoo">-</div><div class="n">leave one out</div></div>
+    </div>
+    <p class="note" style="margin-top:12px">Before this set was built the project had three
+    usable cases and an error of 8.0 years. Origin dates are still being verified against
+    primary sources, so these figures are provisional.</p>
+  </div>
+</section>
+
+<section class="panel">
+  <span class="eyebrow">All candidates</span>
+  <h2>Every concept, screened</h2>
+  <p class="note" style="margin:6px 0 12px">Rejected rows are kept visible. A screen that
+  silently drops cases is how we lost twenty years on one concept.</p>
+  <div class="scroll">
+    <table id="tbl">
+      <thead><tr>
+        <th>Concept</th><th class="num">Origin</th><th class="num">Detected</th>
+        <th class="num">Error</th><th class="num">Docs</th><th class="num">Pre</th><th>Status</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+<footer>
+  <div>Sahar &#183; ArtSciLab and Off-Center for Emergence Studies, The University of Texas at Dallas.</div>
+  <div>Bibliographic data from OpenAlex, queried live. Built with AI assistance under the
+  first author's direction. Figures provisional pending date verification.</div>
+</footer>
+
+</div>
+
+<script>
+const B = {"ts":1900,"tot":[100476,91136,92179,93272,93949,100698,98367,99267,103900,108796,115706,117296,120874,119817,114868,103650,101704,97355,96045,101028,116241,120283,128898,129825,136460,141990,152929,160137,164767,170396,182431,176591,180250,175927,177325,187153,189737,191103,193648,190827,201994,169283,158603,148142,140155,143299,172961,201489,228602,244780,312851,319173,330035,346304,355124,365453,374480,393989,418068,442727,500061,489185,516715,568963,600620,648891,703066,755142,808512,861751,1010319,933665,975241,994508,1035155,1078070,1100749,1148600,1199977,1246027,1367067,1356881,1389961,1445991,1514823,1564770,1643894,1731459,1811990,1930647,2092020,2088171,2187268,2281691,2408035,2559208,2772061,2863814,3049142,3164339,3819613,3822941,4435278,4718819,5122141,5473114,5961966,6498047,6992429,7564322,8106253,8722672,8993119,9445110,9997958,10215225,10627955,10486583,10440406,10808818,11502048,10786868,10281951,10918300,10867939,14673529,31978670],"C":12,"beta":0.0,"offset":3.6,"raw":3.8,"loo":2.6,"rows":[{"n":"simulated annealing","o":1983,"d":48516,"p":45,"poly":"ok","f":null,"on":1985,"e":2,"u":true,"src":"Kirkpatrick, Gelatt and Vecchi, Science 220(4598)."},{"n":"genetic programming","o":1992,"d":23931,"p":368,"poly":"polysemy risk","f":1977,"on":1977,"e":-15,"u":false,"src":"Koza, Genetic Programming, MIT Press."},{"n":"support vector machine","o":1992,"d":212255,"p":156,"poly":"clean","f":null,"on":1995,"e":3,"u":true,"src":"Boser, Guyon and Vapnik, COLT 1992."},{"n":"quantum teleportation","o":1993,"d":4802,"p":0,"poly":"clean","f":null,"on":1998,"e":5,"u":true,"src":"Bennett et al., Physical Review Letters 70(13)."},{"n":"world wide web","o":1989,"d":35019,"p":136,"poly":"ok","f":null,"on":1992,"e":3,"u":true,"src":"Berners-Lee, Information Management: A Proposal, CERN."},{"n":"long short-term memory","o":1997,"d":90756,"p":28,"poly":"clean","f":null,"on":2009,"e":12,"u":true,"src":"Hochreiter and Schmidhuber, Neural Computation 9(8)."},{"n":"generative adversarial network","o":2014,"d":56764,"p":55,"poly":"clean","f":null,"on":2016,"e":2,"u":true,"src":"Goodfellow et al., NeurIPS 2014."},{"n":"augmented reality","o":1992,"d":95974,"p":40,"poly":"clean","f":null,"on":1992,"e":0,"u":true,"src":"Caudell and Mizell, HICSS 1992, coining the term at Boeing."},{"n":"internet of things","o":1999,"d":272431,"p":129,"poly":"clean","f":null,"on":2003,"e":4,"u":true,"src":"Ashton, presentation at Procter and Gamble."},{"n":"machine learning","o":1959,"d":1030184,"p":168,"poly":"ok","f":1953,"on":1953,"e":-6,"u":false,"src":"Samuel, IBM Journal of Research and Development 3(3)."},{"n":"artificial intelligence","o":1956,"d":649498,"p":42,"poly":"clean","f":null,"on":1961,"e":5,"u":true,"src":"McCarthy et al., Dartmouth Summer Research Project proposal."},{"n":"polymerase chain reaction","o":1985,"d":415043,"p":303,"poly":"clean","f":null,"on":1983,"e":-2,"u":true,"src":"Saiki et al., Science 230(4732); Mullis, Nobel 1993."},{"n":"monoclonal antibody","o":1975,"d":290022,"p":218,"poly":"clean","f":null,"on":1977,"e":2,"u":true,"src":"Kohler and Milstein, Nature 256."},{"n":"apoptosis","o":1972,"d":764825,"p":340,"poly":"ok","f":1964,"on":1964,"e":-8,"u":false,"src":"Kerr, Wyllie and Currie, British Journal of Cancer 26(4)."},{"n":"prion","o":1982,"d":33738,"p":83,"poly":"ok","f":null,"on":1984,"e":2,"u":true,"src":"Prusiner, Science 216(4542), coining the term."},{"n":"telomerase","o":1985,"d":32994,"p":27,"poly":"ok","f":null,"on":1990,"e":5,"u":true,"src":"Greider and Blackburn, Cell 43(2)."},{"n":"RNA interference","o":1998,"d":50927,"p":108,"poly":"ok","f":null,"on":1999,"e":1,"u":true,"src":"Fire and Mello, Nature 391."},{"n":"induced pluripotent stem cells","o":2006,"d":44679,"p":149,"poly":"ok","f":null,"on":2007,"e":1,"u":true,"src":"Takahashi and Yamanaka, Cell 126(4)."},{"n":"optogenetics","o":2006,"d":8975,"p":39,"poly":"clean","f":null,"on":2010,"e":4,"u":true,"src":"Deisseroth coins the term; Boyden et al. 2005 the method."},{"n":"DNA fingerprinting","o":1985,"d":10794,"p":32,"poly":"ok","f":null,"on":1986,"e":1,"u":true,"src":"Jeffreys, Wilson and Thein, Nature 314."},{"n":"microbiome","o":2001,"d":145674,"p":714,"poly":"ok","f":1970,"on":1970,"e":-31,"u":false,"src":"Lederberg and McCray, The Scientist 15(7)."},{"n":"proteomics","o":1995,"d":288161,"p":471,"poly":"ok","f":1983,"on":1983,"e":-12,"u":false,"src":"Wilkins et al.; term coined 1994 and published 1995."},{"n":"buckminsterfullerene","o":1985,"d":1871,"p":5,"poly":"polysemy risk","f":null,"on":1990,"e":5,"u":false,"src":"Kroto, Heath, OBrien, Curl and Smalley, Nature 318."},{"n":"scanning tunneling microscopy","o":1981,"d":40559,"p":69,"poly":"ok","f":null,"on":1983,"e":2,"u":true,"src":"Binnig and Rohrer, IBM Zurich; Nobel 1986."},{"n":"dark energy","o":1998,"d":43817,"p":42,"poly":"clean","f":null,"on":1999,"e":1,"u":true,"src":"Turner coins the term following the accelerating expansion results."},{"n":"high temperature superconductivity","o":1986,"d":5792,"p":122,"poly":"polysemy risk","f":null,"on":1987,"e":1,"u":false,"src":"Bednorz and Muller, Zeitschrift fur Physik B 64."},{"n":"quark","o":1964,"d":153821,"p":57,"poly":"ok","f":null,"on":1964,"e":0,"u":true,"src":"Gell-Mann, Physics Letters 8(3)."},{"n":"fuzzy set","o":1965,"d":135158,"p":19,"poly":"clean","f":null,"on":1973,"e":8,"u":true,"src":"Zadeh, Fuzzy sets, Information and Control 8(3)."},{"n":"catastrophe theory","o":1972,"d":2398,"p":7,"poly":"polysemy risk","f":null,"on":1976,"e":4,"u":false,"src":"Thom, Stabilite structurelle et morphogenese."},{"n":"strange attractor","o":1971,"d":3095,"p":2,"poly":"polysemy risk","f":null,"on":1981,"e":10,"u":false,"src":"Ruelle and Takens, Communications in Mathematical Physics 20(3)."},{"n":"wavelet transform","o":1984,"d":96108,"p":54,"poly":"clean","f":null,"on":1990,"e":6,"u":true,"src":"Grossmann and Morlet, SIAM Journal on Mathematical Analysis 15(4)."},{"n":"Monte Carlo method","o":1949,"d":227264,"p":19,"poly":"ok","f":null,"on":1957,"e":8,"u":true,"src":"Metropolis and Ulam, Journal of the American Statistical Association 44."},{"n":"cybernetics","o":1948,"d":11042,"p":1,"poly":"clean","f":null,"on":1949,"e":1,"u":true,"src":"Wiener, Cybernetics: Or Control and Communication."},{"n":"holography","o":1948,"d":143290,"p":223,"poly":"polysemy risk","f":null,"on":1965,"e":17,"u":false,"src":"Gabor, 'A new microscopic principle', Nature 1948. Nobel 1971."},{"n":"information theory","o":1948,"d":42061,"p":5,"poly":"ok","f":null,"on":1953,"e":5,"u":true,"src":"Shannon, 'A mathematical theory of communication', 1948."},{"n":"computer graphics","o":1963,"d":36161,"p":29,"poly":"ok","f":null,"on":1967,"e":4,"u":true,"src":"Sutherland's Sketchpad, MIT 1963."},{"n":"fractal","o":1975,"d":9303,"p":5,"poly":"ok","f":null,"on":1983,"e":8,"u":true,"src":"Mandelbrot, 'Les objets fractals', 1975."},{"n":"artificial life","o":1986,"d":4557,"p":20,"poly":"polysemy risk","f":null,"on":1991,"e":5,"u":false,"src":"Langton coins the term; first workshop 1987."},{"n":"genetic algorithms","o":1975,"d":294762,"p":140,"poly":"ok","f":null,"on":1984,"e":9,"u":true,"src":"Holland, 'Adaptation in Natural and Artificial Systems', 1975."}],"sweep":[{"c":2,"n":14,"mae":1.7},{"c":3,"n":17,"mae":2.3},{"c":5,"n":24,"mae":2.7},{"c":8,"n":25,"mae":3.0},{"c":12,"n":28,"mae":3.8},{"c":20,"n":31,"mae":4.6},{"c":40,"n":32,"mae":7.2},{"c":80,"n":32,"mae":10.6}],"stem":[11,12,13,16,17,21,22,25,27,31],"issn":["0024-094X","0961-1215","1071-4391","1748-7331"]};
+const TOT = {};
+B.tot.forEach((n,i)=>TOT[B.ts+i]=n);
+const REF = 1975, SUSTAIN = 3, PRE_WINDOW = 20;
+const $ = id => document.getElementById(id);
+const mean = a => a.reduce((x,y)=>x+y,0)/a.length;
+
+function fieldFilter(){
+  return 'primary_topic.field.id:' + B.stem.map(i=>'https://openalex.org/fields/'+i).join('|');
+}
+function issnFilter(){ return 'primary_location.source.issn:!' + B.issn.join('|'); }
+
+async function yearCounts(terms, useField){
+  const strict = terms.filter(t=>t.includes(' '));
+  const use = (useField && strict.length) ? strict : terms;
+  const phrase = use.map(t=>'"'+t+'"').join(' OR ');
+  const f = ['title_and_abstract.search:'+phrase, issnFilter()];
+  if (useField) f.push(fieldFilter());
+  const url = 'https://api.openalex.org/works?filter='+encodeURIComponent(f.join(','))+
+              '&group_by=publication_year&per-page=200';
+  const r = await fetch(url);
+  if(!r.ok) throw new Error('OpenAlex returned '+r.status);
+  const d = await r.json();
+  const out = {};
+  (d.group_by||[]).forEach(g=>{ const y=parseInt(g.key,10); if(!isNaN(y)&&y>=1900) out[y]=g.count; });
+  return out;
+}
+
+function onset(counts, C, beta){
+  const tRef = TOT[REF]; if(!tRef) return null;
+  const years = Object.keys(counts).map(Number).filter(y=>y>=1900&&TOT[y]).sort((a,b)=>a-b);
+  const clears = y => { const t=TOT[y]; if(!t) return false;
+    return (counts[y]||0) >= C*Math.pow(t/tRef,beta); };
+  for(const y of years){
+    let ok=true; for(let i=0;i<SUSTAIN;i++){ if(!clears(y+i)){ ok=false; break; } }
+    if(ok) return y;
+  }
+  return null;
+}
+
+function firesBefore(counts, origin, C, beta){
+  const pre={}; for(const [y,n] of Object.entries(counts)) if(+y<origin) pre[y]=n;
+  if(!Object.keys(pre).length) return null;
+  return onset(pre, C, beta);
+}
+
+function polysemy(counts, origin){
+  const pre=[], post=[];
+  for(const [ys,n] of Object.entries(counts)){
+    const y=+ys, t=TOT[y]; if(!t) continue;
+    const rate = 1e6*n/t;
+    if(y>=origin-PRE_WINDOW && y<origin) pre.push(rate);
+    else if(y>origin) post.push(rate);
+  }
+  const base = pre.length?mean(pre):0, postRate = post.length?mean(post):0;
+  const lift = base>0 ? postRate/base : Infinity;
+  let verdict = (base===0||lift>=100)?'clean':(lift>=20?'ok':'polysemy risk');
+  const hits = Object.entries(counts).reduce((s,[y,n])=>+y<origin?s+n:s,0);
+  return {verdict, lift, hits};
+}
+
+function drawSpark(counts, origin, detected){
+  const svg=$('spark'); svg.innerHTML='';
+  const years=Object.keys(counts).map(Number).filter(y=>y>=1900&&y<=2026).sort((a,b)=>a-b);
+  if(!years.length){ svg.hidden=true; return; }
+  const y0=Math.min(1900,years[0]), y1=2026, max=Math.max(...years.map(y=>counts[y]||0))||1;
+  const X=y=>(y-y0)/(y1-y0)*700, Y=v=>56-(v/max)*50;
+  let d='';
+  for(let y=y0;y<=y1;y++){ const v=counts[y]||0; d+=(d?'L':'M')+X(y).toFixed(1)+' '+Y(v).toFixed(1); }
+  const ns='http://www.w3.org/2000/svg';
+  const area=document.createElementNS(ns,'path');
+  area.setAttribute('d', d+'L700 56 L0 56 Z');
+  area.setAttribute('fill','var(--grid)'); svg.appendChild(area);
+  const line=document.createElementNS(ns,'path');
+  line.setAttribute('d',d); line.setAttribute('fill','none');
+  line.setAttribute('stroke','var(--dim)'); line.setAttribute('stroke-width','1'); svg.appendChild(line);
+  const mark=(y,color)=>{ if(y==null) return;
+    const l=document.createElementNS(ns,'line');
+    l.setAttribute('x1',X(y)); l.setAttribute('x2',X(y)); l.setAttribute('y1','2'); l.setAttribute('y2','56');
+    l.setAttribute('stroke',color); l.setAttribute('stroke-width','1.5'); svg.appendChild(l); };
+  mark(origin,'var(--exact)'); mark(detected,'var(--signal)');
+  svg.hidden=false;
+}
+
+function drawCurve(){
+  const svg=$('curve'), ns='http://www.w3.org/2000/svg'; svg.innerHTML='';
+  const pts=B.sweep, L=48,R=14,T=14,Bm=42, W=420,H=230;
+  const maxN=Math.max(...pts.map(p=>p.n)), maxE=Math.max(...pts.map(p=>p.mae));
+  const X=n=>L+(n/maxN)*(W-L-R), Y=e=>H-Bm-(e/maxE)*(H-T-Bm);
+  const add=(t,a)=>{const e=document.createElementNS(ns,t);for(const k in a)e.setAttribute(k,a[k]);svg.appendChild(e);return e;};
+  [0,.25,.5,.75,1].forEach(f=>{
+    add('line',{x1:L,x2:W-R,y1:Y(maxE*f),y2:Y(maxE*f),stroke:'var(--grid)','stroke-width':1});
+    const t=add('text',{x:L-7,y:Y(maxE*f)+3.5,'text-anchor':'end',fill:'var(--dim)','font-size':9.5,
+      'font-family':'var(--fm)'}); t.textContent=(maxE*f).toFixed(0);
+  });
+  let d='';
+  pts.forEach(p=>{ d+=(d?'L':'M')+X(p.n).toFixed(1)+' '+Y(p.mae).toFixed(1); });
+  add('path',{d,fill:'none',stroke:'var(--signal)','stroke-width':1.6});
+  pts.forEach(p=>{
+    const hit=p.c===B.C;
+    add('circle',{cx:X(p.n),cy:Y(p.mae),r:hit?4.5:2.8,fill:hit?'var(--signal)':'var(--panel)',
+      stroke:'var(--signal)','stroke-width':1.6});
+    const t=add('text',{x:X(p.n),y:Y(p.mae)-9,'text-anchor':'middle',fill:hit?'var(--signal)':'var(--dim)',
+      'font-size':9,'font-family':'var(--fm)'}); t.textContent='C'+p.c;
+  });
+  const xl=add('text',{x:(L+W-R)/2,y:H-14,'text-anchor':'middle',fill:'var(--dim)','font-size':10,
+    'font-family':'var(--fm)'}); xl.textContent='CASES ADMITTED';
+  const yl=add('text',{x:12,y:H/2,'text-anchor':'middle',fill:'var(--dim)','font-size':10,
+    'font-family':'var(--fm)',transform:'rotate(-90 12 '+(H/2)+')'}); yl.textContent='MEAN ERROR, YEARS';
+  [0,.5,1].forEach(f=>{
+    const t=add('text',{x:X(maxN*f),y:H-27,'text-anchor':'middle',fill:'var(--dim)','font-size':9.5,
+      'font-family':'var(--fm)'}); t.textContent=(maxN*f).toFixed(0);
+  });
+}
+
+function fillTable(){
+  const tb=document.querySelector('#tbl tbody');
+  const rows=[...B.rows].sort((a,b)=>(b.u-a.u)||(b.d-a.d));
+  tb.innerHTML=rows.map(r=>{
+    let status, cls='';
+    if(r.poly==='polysemy risk'){ status='polysemy'; cls='flag'; }
+    else if(r.f!=null){ status='fires '+r.f; cls='flag'; }
+    else if(r.on==null){ status='not detected'; cls='flag'; }
+    else status='usable';
+    const e=r.e==null?'-':(r.e>0?'+':'')+r.e;
+    const ec=r.e==null?'':(r.e>0?'late':r.e<0?'early':'exact');
+    return '<tr><td>'+r.n+'</td><td class="num">'+r.o+'</td><td class="num">'+(r.on??'-')+
+      '</td><td class="num '+ec+'">'+e+'</td><td class="num">'+r.d.toLocaleString()+
+      '</td><td class="num">'+r.p+'</td><td class="'+cls+'">'+status+'</td></tr>';
+  }).join('');
+}
+
+async function run(){
+  const phrase=$('phrase').value.trim(), origin=parseInt($('origin').value,10);
+  if(!phrase||isNaN(origin)){ $('status').textContent='Enter a phrase and a four-digit year.'; return; }
+  $('run').disabled=true; $('status').textContent='Querying OpenAlex...';
+  try{
+    const terms=[phrase];
+    const [screenCounts, detectCounts] = await Promise.all([
+      yearCounts(terms,false), yearCounts(terms,true)
+    ]);
+    const total=Object.values(detectCounts).reduce((a,b)=>a+b,0);
+    if(!total){ $('status').textContent='No documents match that phrase in the science literature. Try another wording.';
+      $('readout').hidden=true; $('screens').hidden=true; $('spark').hidden=true; $('run').disabled=false; return; }
+    const poly=polysemy(screenCounts,origin);
+    const fires=firesBefore(detectCounts,origin,B.C,B.beta);
+    const on=onset(detectCounts,B.C,B.beta);
+    const err=on==null?null:on-origin;
+    const pre=Object.entries(detectCounts).reduce((s,[y,n])=>+y<origin?s+n:s,0);
+
+    $('rOrigin').textContent=origin;
+    $('rOnset').textContent=on??'none';
+    $('rOnsetNote').textContent=on==null?'never clears':'measured';
+    const ee=$('rErr');
+    ee.textContent=err==null?'-':(err>0?'+':'')+err;
+    ee.className='v '+(err==null?'':err>0?'late':err<0?'early':'exact');
+    $('rErrNote').textContent=err==null?'no reading':err>0?'years late':err<0?'years early':'exact';
+    $('rDocs').textContent=total.toLocaleString();
+    $('rPre').textContent=pre+' before origin';
+
+    const pf=poly.verdict!=='polysemy risk';
+    $('d1').style.background=pf?'var(--exact)':'var(--fail)';
+    $('v1').textContent=poly.verdict; $('v1').className='verdict '+(pf?'exact':'fail');
+    $('s1').textContent=poly.hits+' documents use this phrase before '+origin+
+      (poly.lift===Infinity?', none in the two decades before it'
+        :'. Usage after the origin is '+poly.lift.toFixed(0)+' times the prior rate')+'.';
+
+    const af=fires==null;
+    $('d2').style.background=af?'var(--exact)':'var(--fail)';
+    $('v2').textContent=af?'admissible':'rejected'; $('v2').className='verdict '+(af?'exact':'fail');
+    $('s2').textContent=af
+      ? 'The detector stays quiet before '+origin+', so this concept can calibrate it.'
+      : 'The detector fires in '+fires+', before the concept existed. It cannot calibrate itself on contamination.';
+
+    drawSpark(detectCounts,origin,on);
+    $('readout').hidden=false; $('screens').hidden=false;
+    $('status').textContent='Green marker is the documented origin, amber is what the instrument detected.';
+  }catch(e){
+    $('status').textContent='Query failed: '+e.message+'. OpenAlex may be rate limiting; wait a moment and try again.';
+  }
+  $('run').disabled=false;
+}
+
+$('kN').textContent=B.rows.filter(r=>r.u).length;
+$('kRaw').textContent=B.raw.toFixed(1);
+$('kLoo').textContent=B.loo.toFixed(1);
+drawCurve(); fillTable();
+$('run').addEventListener('click',run);
+$('phrase').addEventListener('keydown',e=>{if(e.key==='Enter')run();});
+$('origin').addEventListener('keydown',e=>{if(e.key==='Enter')run();});
+document.querySelectorAll('[data-p]').forEach(b=>b.addEventListener('click',()=>{
+  $('phrase').value=b.dataset.p; $('origin').value=b.dataset.o; run();
+}));
+run();
+</script>

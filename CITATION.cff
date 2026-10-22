@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+title: "Sahar: calibrating concept-emergence detection against documented origins"
+message: "If you use this software, please cite it as below."
+type: software
+authors:
+  - family-names: Bootwala
+    given-names: Abbas
+    affiliation: "The University of Texas at Dallas"
+  - family-names: Malina
+    given-names: Roger F.
+    affiliation: "The University of Texas at Dallas"
+abstract: >-
+  Software for detecting when a concept enters a literature, and a protocol for
+  measuring the error of that detection against origins documented outside the
+  data. Includes two screens: one for terms carrying an older unrelated sense,
+  and one for whether a concept can legitimately calibrate a given detector.
+keywords:
+  - scientometrics
+  - novelty indicators
+  - concept emergence
+  - measurement error
+  - validation
+  - OpenAlex
+license: MIT
+repository-code: "https://github.com/ABBASBOOTWALA/sahar"

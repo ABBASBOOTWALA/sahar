@@ -1,0 +1,262 @@
+{
+ "unfiltered": {
+  "description": "Phrase match, no disambiguation.",
+  "rows": [
+   {
+    "concept": "holography",
+    "documented": 1948,
+    "measured": 1906,
+    "error": 42,
+    "censored": false
+   },
+   {
+    "concept": "information theory",
+    "documented": 1948,
+    "measured": 1951,
+    "error": 3,
+    "censored": false
+   },
+   {
+    "concept": "computer graphics",
+    "documented": 1963,
+    "measured": 1965,
+    "error": 2,
+    "censored": false
+   },
+   {
+    "concept": "fractal",
+    "documented": 1975,
+    "measured": 1980,
+    "error": 5,
+    "censored": false
+   },
+   {
+    "concept": "artificial life",
+    "documented": 1986,
+    "measured": 1900,
+    "error": 86,
+    "censored": true
+   },
+   {
+    "concept": "genetic algorithms",
+    "documented": 1975,
+    "measured": 1987,
+    "error": 12,
+    "censored": false
+   }
+  ],
+  "mae": 25.0,
+  "median_error": 8.5,
+  "within_5y": 3,
+  "censored": 1,
+  "missing": 0
+ },
+ "field": {
+  "description": "Restricted to broad STEM fields.",
+  "rows": [
+   {
+    "concept": "holography",
+    "documented": 1948,
+    "measured": 1939,
+    "error": 9,
+    "censored": false
+   },
+   {
+    "concept": "information theory",
+    "documented": 1948,
+    "measured": 1952,
+    "error": 4,
+    "censored": false
+   },
+   {
+    "concept": "computer graphics",
+    "documented": 1963,
+    "measured": 1965,
+    "error": 2,
+    "censored": false
+   },
+   {
+    "concept": "fractal",
+    "documented": 1975,
+    "measured": 1982,
+    "error": 7,
+    "censored": false
+   },
+   {
+    "concept": "artificial life",
+    "documented": 1986,
+    "measured": 1900,
+    "error": 86,
+    "censored": true
+   },
+   {
+    "concept": "genetic algorithms",
+    "documented": 1975,
+    "measured": 1987,
+    "error": 12,
+    "censored": false
+   }
+  ],
+  "mae": 20.0,
+  "median_error": 8.0,
+  "within_5y": 2,
+  "censored": 1,
+  "missing": 0
+ },
+ "phrase": {
+  "description": "Multi-word phrases only, single words dropped.",
+  "rows": [
+   {
+    "concept": "holography",
+    "documented": 1948,
+    "measured": 1906,
+    "error": 42,
+    "censored": false
+   },
+   {
+    "concept": "information theory",
+    "documented": 1948,
+    "measured": 1951,
+    "error": 3,
+    "censored": false
+   },
+   {
+    "concept": "computer graphics",
+    "documented": 1963,
+    "measured": 1967,
+    "error": 4,
+    "censored": false
+   },
+   {
+    "concept": "fractal",
+    "documented": 1975,
+    "measured": 1986,
+    "error": 11,
+    "censored": false
+   },
+   {
+    "concept": "artificial life",
+    "documented": 1986,
+    "measured": 1993,
+    "error": 7,
+    "censored": false
+   },
+   {
+    "concept": "genetic algorithms",
+    "documented": 1975,
+    "measured": 1987,
+    "error": 12,
+    "censored": false
+   }
+  ],
+  "mae": 13.2,
+  "median_error": 9.0,
+  "within_5y": 2,
+  "censored": 0,
+  "missing": 0
+ },
+ "topic-anchored(n=6)": {
+  "description": "Topic profile learned from modern usage, applied to all years.",
+  "rows": [
+   {
+    "concept": "holography",
+    "documented": 1948,
+    "measured": 1965,
+    "error": 17,
+    "censored": false
+   },
+   {
+    "concept": "information theory",
+    "documented": 1948,
+    "measured": 1958,
+    "error": 10,
+    "censored": false
+   },
+   {
+    "concept": "computer graphics",
+    "documented": 1963,
+    "measured": 1969,
+    "error": 6,
+    "censored": false
+   },
+   {
+    "concept": "fractal",
+    "documented": 1975,
+    "measured": 1983,
+    "error": 8,
+    "censored": false
+   },
+   {
+    "concept": "artificial life",
+    "documented": 1986,
+    "measured": 1900,
+    "error": 86,
+    "censored": true
+   },
+   {
+    "concept": "genetic algorithms",
+    "documented": 1975,
+    "measured": 1991,
+    "error": 16,
+    "censored": false
+   }
+  ],
+  "mae": 23.8,
+  "median_error": 13.0,
+  "within_5y": 0,
+  "censored": 1,
+  "missing": 0
+ },
+ "phrase+field": {
+  "description": "Multi-word phrases, restricted to STEM fields.",
+  "rows": [
+   {
+    "concept": "holography",
+    "documented": 1948,
+    "measured": 1939,
+    "error": 9,
+    "censored": false
+   },
+   {
+    "concept": "information theory",
+    "documented": 1948,
+    "measured": 1952,
+    "error": 4,
+    "censored": false
+   },
+   {
+    "concept": "computer graphics",
+    "documented": 1963,
+    "measured": 1967,
+    "error": 4,
+    "censored": false
+   },
+   {
+    "concept": "fractal",
+    "documented": 1975,
+    "measured": 1987,
+    "error": 12,
+    "censored": false
+   },
+   {
+    "concept": "artificial life",
+    "documented": 1986,
+    "measured": 1993,
+    "error": 7,
+    "censored": false
+   },
+   {
+    "concept": "genetic algorithms",
+    "documented": 1975,
+    "measured": 1987,
+    "error": 12,
+    "censored": false
+   }
+  ],
+  "mae": 8.0,
+  "median_error": 8.0,
+  "within_5y": 2,
+  "censored": 0,
+  "missing": 0
+ }
+}
