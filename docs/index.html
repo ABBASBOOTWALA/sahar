@@ -87,6 +87,29 @@ td.num{text-align:right;font-family:var(--fm);font-variant-numeric:tabular-nums}
 .note{font-size:12.5px;color:var(--dim)}
 .flag{font-family:var(--fm);font-size:10.5px;color:var(--fail)}
 .spark{display:block;width:100%;height:58px}
+details{border:1px solid var(--line);border-radius:2px;background:var(--panel)}
+details+details{margin-top:8px}
+summary{cursor:pointer;padding:10px 13px;font-family:var(--fm);font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--dim);list-style:none;display:flex;align-items:center;gap:8px}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";font-size:14px;line-height:1;color:var(--signal)}
+details[open] summary::before{content:"\2212"}
+summary:hover{color:var(--signal)}
+summary:focus-visible{outline:2px solid var(--signal);outline-offset:-2px}
+.dbody{padding:0 13px 14px;display:flex;flex-direction:column;gap:14px}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:7px 16px;font-size:13px}
+dt{font-weight:600;white-space:nowrap}
+dd{margin:0;color:var(--dim)}
+@media (max-width:560px){dl{grid-template-columns:1fr;gap:2px 0}dd{margin-bottom:8px}}
+.docs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0}
+.docs li{display:flex;gap:11px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px;
+  align-items:baseline}
+.docs li:last-child{border-bottom:none}
+.docs .yr{font-family:var(--fm);font-variant-numeric:tabular-nums;color:var(--signal);flex:none;
+  font-size:12.5px}
+.docs .ti{min-width:0;flex:1 1 auto}
+.docs .vn{display:block;color:var(--dim);font-size:11.5px;margin-top:1px}
+.gh{font-size:12.5px;font-weight:600;margin:0 0 3px}
 footer{border-top:1px solid var(--line);padding-top:16px;font-size:12.5px;color:var(--dim);display:flex;
   flex-direction:column;gap:6px}
 a{color:var(--signal)}
@@ -158,6 +181,72 @@ a{color:var(--signal)}
 
   <p class="note" id="status">Detector set to 12 documents sustained for three years, which is the
   operating point we recommend.</p>
+
+  <details id="evidence" hidden>
+    <summary>Matching documents</summary>
+    <div class="dbody">
+      <div>
+        <p class="gh">Earliest matches, before the documented origin</p>
+        <p class="note" id="evEarlyNote">These are what the screens exist to catch. A document
+        using the phrase before the concept existed is using it to mean something else, or is
+        mis-dated.</p>
+        <ol class="docs" id="evEarly"></ol>
+      </div>
+      <div>
+        <p class="gh">Around the detected onset</p>
+        <p class="note">What the detector was reading when it fired.</p>
+        <ol class="docs" id="evOnset"></ol>
+      </div>
+    </div>
+  </details>
+
+  <details id="glossary">
+    <summary>What these terms mean</summary>
+    <div class="dbody">
+      <dl>
+        <dt>Documented origin</dt>
+        <dd>The year the concept actually originated, established outside this data by a
+        specific publication or event. Shannon's paper for information theory, 1948. This is
+        the answer the instrument is being tested against, not something it computed.</dd>
+
+        <dt>Detected onset</dt>
+        <dd>The first year the phrase reaches the detector's threshold in the literature and
+        then stays there. This is the instrument's own answer.</dd>
+
+        <dt>Signed error</dt>
+        <dd>Detected minus documented. Positive means the instrument read the concept as
+        arriving later than it did, negative means earlier. The sign matters more than the
+        size: a one-directional error is a bias that can be corrected, scatter cannot.</dd>
+
+        <dt>Documents</dt>
+        <dd>How many works in OpenAlex match the phrase, after excluding the journals this
+        project studies so that nothing is counted on both sides.</dd>
+
+        <dt>The detector</dt>
+        <dd>Twelve documents in a year, sustained for three consecutive years. Sustained,
+        because a single-year spike in a corpus this size is usually a cataloguing artefact.
+        Twelve, because the setting is a trade: stricter is more accurate but discards more
+        cases, which is the curve shown below.</dd>
+
+        <dt>Polysemy screen</dt>
+        <dd>Catches phrases that already meant something else. Holography collides with
+        <em>holograph</em>, a probate term for a handwritten will that predates the physics by
+        centuries, so the phrase appears in the record long before Gabor. The screen compares
+        how often the phrase is used before the origin against after it.</dd>
+
+        <dt>Admissibility screen</dt>
+        <dd>Asks whether a concept can fairly test this detector at all. It runs the detector
+        over the years before the origin. If it fires there, it is firing on something that
+        cannot be the concept, so that case cannot be used to judge it. This exists because a
+        screen validated against one detector gave no protection to another, and a concept
+        carrying 140 mis-dated records was read twenty years early.</dd>
+
+        <dt>Usable</dt>
+        <dd>Passed both screens and produced a reading. Only these count toward the error
+        figures.</dd>
+      </dl>
+    </div>
+  </details>
 </section>
 
 <section class="two">
@@ -357,6 +446,31 @@ function setBusy(on){
 /* A failed measurement must never leave the previous one on screen. */
 function clearReadout(){
   $('readout').hidden=true; $('screens').hidden=true; $('spark').hidden=true;
+  $('evidence').hidden=true;
+}
+
+function docList(el,items){
+  el.innerHTML = items.length
+    ? items.map(d=>'<li><span class="yr">'+(d.y??'?')+'</span><span class="ti">'+
+        esc(d.t)+(d.v?'<span class="vn">'+esc(d.v)+(d.ty?' &#183; '+esc(d.ty):'')+'</span>':'')+
+        '</span></li>').join('')
+    : '<li><span class="ti" style="color:var(--dim)">None.</span></li>';
+}
+
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function showDocs(key,origin){
+  const s = B.samples && B.samples[key];
+  const box = $('evidence');
+  if(!s || s.na){ box.hidden=true; return; }
+  docList($('evEarly'), s.e||[]);
+  docList($('evOnset'), s.a||[]);
+  $('evEarlyNote').textContent = (s.e&&s.e.length)
+    ? 'These are what the screens exist to catch. A document using the phrase before '+origin+
+      ' is using it to mean something else, or is mis-dated.'
+    : 'Nothing in the record uses this phrase before '+origin+', which is the clean case.';
+  box.hidden=false;
 }
 
 function markPreset(){
@@ -437,6 +551,7 @@ async function run(){
 
   await settle();
   drawSpark(detectCounts,origin,on);
+  showDocs(key,origin);
   $('readout').hidden=false; $('screens').hidden=false;
   $('status').textContent=(source==='bundled'
     ? 'Computed from counts shipped with this page. '
