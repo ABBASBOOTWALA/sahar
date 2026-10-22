@@ -96,13 +96,13 @@ sahar/
   controls_v2.py  the expanded candidate set, with sources and disputes marked
   cultural.py     song-title tracers, used to validate the screens
   evaluate.py     scores strategies against documented origins
-ui/index.html     a browser instrument; queries OpenAlex live, no server
+docs/index.html   a browser instrument; queries OpenAlex live, no server
 tests/            regression tests for both screens
 ```
 
 ## The interface
 
-`ui/index.html` is a single page with no build step and no backend. It queries
+`docs/index.html` is a single page with no build step and no backend. It queries
 OpenAlex directly from the browser, runs both screens, and reports the signed
 error for any concept you give it. Open the file locally, or see it published
 through GitHub Pages.
